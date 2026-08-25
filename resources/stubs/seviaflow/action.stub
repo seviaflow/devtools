@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ action_namespace }};
+
+use SeviaFlow\Core\Resources\Action;
+
+final class {{ action_class }}
+{
+    public static function make(): Action
+    {
+        return Action::make('{{ action_name }}')
+            ->label('{{ action_label }}')
+            ->requiresConfirmation()
+            ->successMessage('{{ success_message }}')
+            ->errorMessage('{{ error_message }}')
+{{ danger_line }}            ->handle(function (mixed $record): void {
+                //
+            });
+    }
+}

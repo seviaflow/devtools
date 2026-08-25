@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ section_namespace }};
+
+use SeviaFlow\Core\Resources\Fields\TextField;
+use SeviaFlow\Core\Resources\Section;
+
+final class {{ section_class }}
+{
+    public static function make(): Section
+    {
+        return Section::make('{{ section_label }}')
+            ->fields([
+                TextField::make('name')->label('Name'),
+            ]);
+    }
+}

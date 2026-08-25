@@ -1,0 +1,13 @@
+includes:
+  - vendor/larastan/larastan/extension.neon
+
+parameters:
+  paths:
+    - src
+    - config
+    - tests
+  stubFiles:
+    - tests/PHPStan/Stubs/TestResponse.stub.php
+    - tests/PHPStan/Stubs/Testable.stub.php
+  level: 5
+  tmpDir: var/phpstan

@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ table_namespace }};
+
+use SeviaFlow\Core\Resources\Columns\TextColumn;
+use SeviaFlow\Core\Resources\Table;
+
+final class {{ table_class }}
+{
+    public static function configure(Table $table): Table
+    {
+        return $table->columns([
+            TextColumn::make('id')->label('ID')->sortable(),
+        ]);
+    }
+}

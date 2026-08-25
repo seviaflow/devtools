@@ -1,0 +1,63 @@
+{
+    "name": "seviaflow/devtools",
+    "description": "SeviaFlow discovery, generation and diagnostics tooling.",
+    "type": "library",
+    "homepage": "https://github.com/seviaflow/devtools",
+    "license": "proprietary",
+    "support": {
+        "issues": "https://github.com/seviaflow/devtools/issues",
+        "source": "https://github.com/seviaflow/devtools"
+    },
+    "require": {
+        "php": "^8.2",
+        "seviaflow/core": "^0.1@dev",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/console": "^11.0|^12.0|^13.0",
+        "illuminate/database": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^2.9",
+        "laravel/pint": "^1.17",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^2.36|^3.7",
+        "pestphp/pest-plugin-laravel": "^2.4|^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SeviaFlow\\DevTools\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "format": "pint",
+        "format:test": "pint --test",
+        "analyse": "phpstan analyse --debug --no-progress",
+        "check": [
+            "@format:test",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SeviaFlow\\DevTools\\SeviaFlowDevToolsServiceProvider"
+            ]
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

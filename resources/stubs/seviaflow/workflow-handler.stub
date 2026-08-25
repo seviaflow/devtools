@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ workflow_namespace }};
+
+use SeviaFlow\Core\Resources\Workflows\TransitionContext;
+
+final class {{ workflow_handler_class }}
+{
+    public function __invoke(mixed $record, TransitionContext $context): void
+    {
+        // Consider dispatching external side effects after commit.
+    }
+}

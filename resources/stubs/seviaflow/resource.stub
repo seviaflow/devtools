@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ resource_namespace }};
+
+use {{ form_class_import }};
+use {{ table_class_import }};
+use {{ model_class }};
+use SeviaFlow\Core\Resources\Form;
+use SeviaFlow\Core\Resources\Resource;
+use SeviaFlow\Core\Resources\Table;
+{{ relation_imports }}
+
+final class {{ resource_class }} extends Resource
+{
+    protected static string $model = {{ model_short }}::class;
+
+    public static function table(Table $table): Table
+    {
+        return {{ table_class_short }}::configure($table);
+    }
+
+    public static function form(Form $form): Form
+    {
+        return {{ form_class_short }}::configure($form);
+    }
+
+    public static function actions(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function bulkActions(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function relations(): array
+    {
+        return [
+            {{ relation_lines }}
+        ];
+    }
+}

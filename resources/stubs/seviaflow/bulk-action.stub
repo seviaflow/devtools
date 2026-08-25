@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ bulk_action_namespace }};
+
+use Illuminate\Support\Collection;
+use SeviaFlow\Core\Resources\BulkAction;
+
+final class {{ bulk_action_class }}
+{
+    public static function make(): BulkAction
+    {
+        return BulkAction::make('{{ bulk_action_name }}')
+            ->label('{{ bulk_action_label }}')
+            ->requiresConfirmation()
+            ->successMessage('{{ bulk_success_message }}')
+            ->errorMessage('{{ bulk_error_message }}')
+{{ bulk_danger_line }}            ->handle(function (Collection $records): void {
+                //
+            });
+    }
+}

@@ -9,6 +9,7 @@ final class SchemaColumn
     public function __construct(
         private readonly string $name,
         private readonly string $type,
+        private readonly ?string $databaseType = null,
     ) {}
 
     public function name(): string
@@ -19,5 +20,10 @@ final class SchemaColumn
     public function type(): string
     {
         return $this->type;
+    }
+
+    public function databaseType(): string
+    {
+        return $this->databaseType ?? $this->type;
     }
 }

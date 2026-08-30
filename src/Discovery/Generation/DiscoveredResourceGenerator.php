@@ -39,14 +39,11 @@ final class DiscoveredResourceGenerator
             $resourceDirectory.DIRECTORY_SEPARATOR.$resourceClass.'.php' => $stubRenderer('resource.stub', [
                 '{{ resource_namespace }}' => $resourceNamespace,
                 '{{ resource_class }}' => $resourceClass,
-                '{{ table_class_import }}' => $resourceNamespace.'\\Tables\\'.$tableClass,
-                '{{ form_class_import }}' => $resourceNamespace.'\\Forms\\'.$formClass,
+                '{{ imports }}' => $this->renderResourceImports($resourceNamespace, $modelClass, $tableClass, $formClass, $relationSuggestions),
                 '{{ table_class_short }}' => $tableClass,
                 '{{ form_class_short }}' => $formClass,
-                '{{ model_class }}' => $modelClass,
                 '{{ model_short }}' => class_basename($modelClass),
-                '{{ relation_imports }}' => $this->renderRelationImports($relationSuggestions),
-                '{{ relation_lines }}' => $this->renderRelationLines($relationSuggestions, $resourceNamespace),
+                '{{ relation_lines }}' => $this->renderRelationLines($relationSuggestions),
             ]),
             $resourceDirectory.DIRECTORY_SEPARATOR.'Tables'.DIRECTORY_SEPARATOR.$tableClass.'.php' => $this->renderGeneratedTable(
                 $resourceNamespace.'\\Tables',
@@ -99,7 +96,7 @@ final class DiscoveredResourceGenerator
             $this->filterImports($filterSuggestions)
         );
         $imports = array_values(array_unique($imports));
-        sort($imports);
+        $this->sortImports($imports);
 
         $body = "<?php\n\ndeclare(strict_types=1);\n\nnamespace {$namespace};\n\n";
         foreach ($imports as $import) {
@@ -134,7 +131,7 @@ final class DiscoveredResourceGenerator
             $this->formImports($fieldSuggestions)
         );
         $imports = array_values(array_unique($imports));
-        sort($imports);
+        $this->sortImports($imports);
 
         $body = "<?php\n\ndeclare(strict_types=1);\n\nnamespace {$namespace};\n\n";
         foreach ($imports as $import) {
@@ -297,39 +294,71 @@ final class DiscoveredResourceGenerator
     /**
      * @param  array<int, RelationSuggestion>  $relationSuggestions
      */
-    private function renderRelationImports(array $relationSuggestions): string
-    {
-        $imports = [];
+    private function renderResourceImports(
+        string $resourceNamespace,
+        string $modelClass,
+        string $tableClass,
+        string $formClass,
+        array $relationSuggestions
+    ): string {
+        $imports = [
+            $modelClass,
+            $resourceNamespace.'\\Forms\\'.$formClass,
+            $resourceNamespace.'\\Tables\\'.$tableClass,
+            'SeviaFlow\\Core\\Resources\\Form',
+            'SeviaFlow\\Core\\Resources\\Resource',
+            'SeviaFlow\\Core\\Resources\\Table',
+        ];
 
         foreach ($relationSuggestions as $relation) {
             if (! $relation->isHighConfidence()) {
                 continue;
             }
 
-            $imports[] = match ($relation->relationType()) {
-                'hasOne' => 'use SeviaFlow\\Core\\Resources\\Relations\\HasOneRelation;',
-                'hasMany' => 'use SeviaFlow\\Core\\Resources\\Relations\\HasManyRelation;',
-                'belongsToMany' => 'use SeviaFlow\\Core\\Resources\\Relations\\BelongsToManyRelation;',
-                'morphOne' => 'use SeviaFlow\\Core\\Resources\\Relations\\MorphOneRelation;',
-                'morphMany' => 'use SeviaFlow\\Core\\Resources\\Relations\\MorphManyRelation;',
-                'morphToMany' => 'use SeviaFlow\\Core\\Resources\\Relations\\MorphToManyRelation;',
+            $relationImport = match ($relation->relationType()) {
+                'belongsToMany' => 'SeviaFlow\\Core\\Resources\\Relations\\BelongsToManyRelation',
+                'hasMany' => 'SeviaFlow\\Core\\Resources\\Relations\\HasManyRelation',
+                'hasOne' => 'SeviaFlow\\Core\\Resources\\Relations\\HasOneRelation',
+                'morphMany' => 'SeviaFlow\\Core\\Resources\\Relations\\MorphManyRelation',
+                'morphOne' => 'SeviaFlow\\Core\\Resources\\Relations\\MorphOneRelation',
+                'morphToMany' => 'SeviaFlow\\Core\\Resources\\Relations\\MorphToManyRelation',
                 default => null,
             };
+
+            if ($relationImport === null) {
+                continue;
+            }
+
+            $imports[] = $relationImport;
+
+            $relatedResourceShort = $relation->relatedModelShortName();
+            if ($relatedResourceShort === null || $relatedResourceShort === '') {
+                continue;
+            }
+
+            $imports[] = sprintf(
+                '%s\\%sResource\\%sResource',
+                $this->resourcesRootNamespace($resourceNamespace),
+                $relatedResourceShort,
+                $relatedResourceShort
+            );
         }
 
-        $imports = array_values(array_filter(array_unique($imports)));
-        sort($imports);
+        $imports = array_values(array_unique($imports));
+        $this->sortImports($imports);
 
-        return implode("\n", $imports);
+        return implode(
+            "\n",
+            array_map(static fn (string $import): string => 'use '.$import.';', $imports)
+        );
     }
 
     /**
      * @param  array<int, RelationSuggestion>  $relationSuggestions
      */
-    private function renderRelationLines(array $relationSuggestions, string $resourceNamespace): string
+    private function renderRelationLines(array $relationSuggestions): string
     {
         $lines = [];
-        $resourcesRootNamespace = $this->resourcesRootNamespace($resourceNamespace);
 
         foreach ($relationSuggestions as $relation) {
             if (! $relation->isHighConfidence()) {
@@ -341,12 +370,7 @@ final class DiscoveredResourceGenerator
                 continue;
             }
 
-            $resourceClass = sprintf(
-                '\\%s\\%sResource\\%sResource::class',
-                $resourcesRootNamespace,
-                $relatedResourceShort,
-                $relatedResourceShort
-            );
+            $resourceClass = $relatedResourceShort.'Resource::class';
             $name = $relation->name();
 
             $line = match ($relation->relationType()) {
@@ -380,5 +404,13 @@ final class DiscoveredResourceGenerator
         $root = preg_replace('/\\\\[^\\\\]+Resource$/', '', $resourceNamespace);
 
         return is_string($root) && $root !== '' ? $root : $resourceNamespace;
+    }
+
+    /**
+     * @param  array<int, string>  $imports
+     */
+    private function sortImports(array &$imports): void
+    {
+        sort($imports, SORT_STRING | SORT_FLAG_CASE);
     }
 }

@@ -4,13 +4,7 @@ declare(strict_types=1);
 
 namespace {{ resource_namespace }};
 
-use {{ form_class_import }};
-use {{ table_class_import }};
-use {{ model_class }};
-use SeviaFlow\Core\Resources\Form;
-use SeviaFlow\Core\Resources\Resource;
-use SeviaFlow\Core\Resources\Table;
-{{ relation_imports }}
+{{ imports }}
 
 final class {{ resource_class }} extends Resource
 {

@@ -99,7 +99,7 @@ it('successful checks return success', function (): void {
 
     expect($exitCode)->toBe(0);
     expect($output)->toContain('SeviaFlow Doctor');
-    expect($output)->toContain('Config loaded');
+    expect($output)->toContain('Core config loaded.');
     expect($output)->toContain('Routes registered under /admin.');
     expect($output)->toContain('1 resources registered.');
     expect($output)->toContain('Workflow activity table exists.');
@@ -220,7 +220,7 @@ it('doctor warns for high max_per_page', function (): void {
 it('doctor warns when openapi cache is disabled in production-like environment', function (): void {
     config()->set('app.env', 'production');
     config()->set('seviaflow.performance.cache.enabled', true);
-    config()->set('seviaflow.performance.cache.openapi', false);
+    config()->set('seviaflow-api.openapi.cache.enabled', false);
 
     $command = new DoctorCommand;
 

@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Env;
+
 return [
-    'enabled' => env('SEVIAFLOW_DEVTOOLS_ENABLED', true),
+    'enabled' => Env::get('SEVIAFLOW_DEVTOOLS_ENABLED', true),
     'discovery' => [
         'enabled' => true,
         'model_paths' => [

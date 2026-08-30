@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use SeviaFlow\Core\Resources\ApiResource;
 use SeviaFlow\Core\Resources\Resource;
@@ -80,13 +81,15 @@ it('cache command warms openapi cache', function (): void {
 it('cache-clear clears all caches', function (): void {
     pest_test_case()->artisan('seviaflow:cache')->assertSuccessful();
 
-    pest_test_case()->artisan('seviaflow:cache-clear')
-        ->expectsOutput('✓ Resource metadata cache cleared')
-        ->expectsOutput('✓ Navigation metadata cache cleared')
-        ->expectsOutput('✓ OpenAPI cache cleared')
-        ->expectsOutput('✓ Dashboard summary cache cleared')
-        ->expectsOutput('✓ Dashboard widget cache cleared')
-        ->assertSuccessful();
+    $exitCode = Artisan::call('seviaflow:cache-clear');
+    $output = Artisan::output();
+
+    expect($exitCode)->toBe(0);
+    expect($output)->toContain('✓ Resource metadata cache cleared')
+        ->and($output)->toContain('✓ Navigation metadata cache cleared')
+        ->and($output)->toContain('✓ OpenAPI cache cleared')
+        ->and($output)->toContain('✓ Dashboard summary cache cleared')
+        ->and($output)->toContain('✓ Dashboard widget cache cleared');
 
     $resourceCacheKey = sprintf('seviaflow:resource-metadata:%s:%s', 'cache-resource', sha1(CacheCommandResource::class));
 
@@ -105,16 +108,19 @@ it('cache command outputs useful skip messages when cache is disabled globally',
 
 it('disabled cache flags skip warming but clear still works', function (): void {
     config()->set('seviaflow.performance.cache.resources', false);
-    config()->set('seviaflow.performance.cache.navigation', false);
-    config()->set('seviaflow.performance.cache.openapi', false);
-    config()->set('seviaflow.performance.cache.dashboard', false);
+    config()->set('seviaflow-ui.cache.navigation', false);
+    config()->set('seviaflow-ui.cache.dashboard', false);
+    config()->set('seviaflow-api.openapi.cache.enabled', false);
 
-    pest_test_case()->artisan('seviaflow:cache')
-        ->expectsOutput('- Resource metadata cache skipped (disabled)')
-        ->expectsOutput('- Navigation metadata cache skipped (disabled)')
-        ->expectsOutput('- OpenAPI cache skipped (disabled)')
-        ->expectsOutput('- Dashboard cache skipped (disabled)')
-        ->assertSuccessful();
+    $exitCode = Artisan::call('seviaflow:cache');
+    $output = Artisan::output();
+
+    expect($exitCode)->toBe(0);
+    expect($output)->toContain('- Resource metadata cache skipped (disabled)')
+        ->and($output)->toContain('- Navigation metadata cache skipped (disabled)')
+        ->and($output)->toContain('- OpenAPI cache skipped (disabled)')
+        ->and($output)->toContain('- Dashboard summary cache skipped (disabled)')
+        ->and($output)->toContain('- Dashboard widget cache skipped (disabled)');
 
     cache()->store('array')->put('seviaflow.navigation.base', ['tmp' => true], 3600);
     cache()->store('array')->put('seviaflow.openapi', ['tmp' => true], 3600);
@@ -138,7 +144,7 @@ it('disabled cache flags skip warming but clear still works', function (): void 
 });
 
 it('cache warm handles api disabled safely', function (): void {
-    config()->set('seviaflow.api.enabled', false);
+    config()->set('seviaflow-api.enabled', false);
 
     pest_test_case()->artisan('seviaflow:cache')
         ->expectsOutput('✓ OpenAPI schema cached')
@@ -150,11 +156,14 @@ it('cache warm handles api disabled safely', function (): void {
 });
 
 it('cache command reports dashboard cache as user-scoped when enabled', function (): void {
-    config()->set('seviaflow.performance.cache.dashboard', true);
+    config()->set('seviaflow-ui.cache.dashboard', true);
 
-    pest_test_case()->artisan('seviaflow:cache')
-        ->expectsOutput('- Dashboard cache enabled: skipped warm (user-scoped, warmed on request)')
-        ->assertSuccessful();
+    $exitCode = Artisan::call('seviaflow:cache');
+    $output = Artisan::output();
+
+    expect($exitCode)->toBe(0);
+    expect($output)->toContain('- Dashboard summary cache skipped (user-scoped, warmed on request)')
+        ->and($output)->toContain('- Dashboard widget cache skipped (user/context-scoped, warmed on request)');
 });
 
 final class CacheCommandResource extends Resource

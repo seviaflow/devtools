@@ -62,8 +62,62 @@ PHP);
         ->and($results[0]->tableName())->toBe('products')
         ->and($results[0]->primaryKey())->toBe('id')
         ->and($results[0]->fillable())->toBe(['name', 'price'])
-        ->and($results[0]->guarded())->toBe([])
-        ->and($results[0]->casts())->toBe(['price' => 'decimal:2', 'is_active' => 'boolean']);
+        ->and($results[0]->guarded())->toBe([]);
+
+    expect($results[0]->casts())->toMatchArray(['price' => 'decimal:2', 'is_active' => 'boolean']);
+});
+
+it('discovers casts from modern Laravel casts method through the effective model API', function (): void {
+    writeScannerModelFile('ModernCastProduct.php', <<<'PHP'
+<?php
+declare(strict_types=1);
+namespace Tmp\Models;
+use Illuminate\Database\Eloquent\Model;
+final class ModernCastProduct extends Model
+{
+    protected $table = 'modern_cast_products';
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'published_at' => 'datetime',
+            'credit_limit' => 'decimal:2',
+        ];
+    }
+}
+PHP);
+
+    $results = (new ModelScanner)->scan();
+
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->casts())->toMatchArray([
+            'is_active' => 'boolean',
+            'published_at' => 'datetime',
+            'credit_limit' => 'decimal:2',
+        ]);
+});
+
+it('falls back to default cast metadata when a model cannot be safely instantiated', function (): void {
+    writeScannerModelFile('FallbackCastModel.php', <<<'PHP'
+<?php
+declare(strict_types=1);
+namespace Tmp\Models;
+use Illuminate\Database\Eloquent\Model;
+use RuntimeException;
+final class FallbackCastModel extends Model
+{
+    protected $casts = ['flag' => 'boolean'];
+    public function __construct(array $attributes = [])
+    {
+        throw new RuntimeException('unsafe constructor');
+    }
+}
+PHP);
+
+    $results = (new ModelScanner)->scan();
+
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->casts())->toBe(['flag' => 'boolean']);
 });
 
 it('respects ignored models config', function (): void {

@@ -17,10 +17,21 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        return [
+        $providers = [
             SeviaFlowCoreServiceProvider::class,
             SeviaFlowDevToolsServiceProvider::class,
         ];
+
+        foreach ([
+            'SeviaFlow\\Api\\SeviaFlowApiServiceProvider',
+            'SeviaFlow\\Ui\\SeviaFlowUiServiceProvider',
+        ] as $provider) {
+            if (class_exists($provider)) {
+                $providers[] = $provider;
+            }
+        }
+
+        return $providers;
     }
 
     /**

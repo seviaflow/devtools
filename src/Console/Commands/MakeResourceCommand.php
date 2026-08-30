@@ -131,13 +131,10 @@ final class MakeResourceCommand extends SeviaFlowCommand
             $resourceDirectory.DIRECTORY_SEPARATOR.$resourceClass.'.php' => $this->renderStub('resource.stub', [
                 '{{ resource_namespace }}' => $resourceNamespace,
                 '{{ resource_class }}' => $resourceClass,
-                '{{ table_class_import }}' => $resourceNamespace.'\\Tables\\'.$tableClass,
-                '{{ form_class_import }}' => $resourceNamespace.'\\Forms\\'.$formClass,
+                '{{ imports }}' => $this->renderResourceImports($resourceNamespace, $modelClass, $tableClass, $formClass),
                 '{{ table_class_short }}' => $tableClass,
                 '{{ form_class_short }}' => $formClass,
-                '{{ model_class }}' => $modelClass,
                 '{{ model_short }}' => class_basename($modelClass),
-                '{{ relation_imports }}' => '',
                 '{{ relation_lines }}' => '//',
             ]),
             $resourceDirectory.DIRECTORY_SEPARATOR.'Tables'.DIRECTORY_SEPARATOR.$tableClass.'.php' => $this->renderStub('table.stub', [
@@ -153,6 +150,25 @@ final class MakeResourceCommand extends SeviaFlowCommand
             $resourceDirectory.DIRECTORY_SEPARATOR.'Relations'.DIRECTORY_SEPARATOR.'.gitkeep' => '',
             $resourceDirectory.DIRECTORY_SEPARATOR.'Workflows'.DIRECTORY_SEPARATOR.'.gitkeep' => '',
         ];
+    }
+
+    private function renderResourceImports(string $resourceNamespace, string $modelClass, string $tableClass, string $formClass): string
+    {
+        $imports = [
+            $modelClass,
+            $resourceNamespace.'\\Forms\\'.$formClass,
+            $resourceNamespace.'\\Tables\\'.$tableClass,
+            'SeviaFlow\\Core\\Resources\\Form',
+            'SeviaFlow\\Core\\Resources\\Resource',
+            'SeviaFlow\\Core\\Resources\\Table',
+        ];
+
+        sort($imports, SORT_STRING | SORT_FLAG_CASE);
+
+        return implode(
+            "\n",
+            array_map(static fn (string $import): string => 'use '.$import.';', $imports)
+        );
     }
 
     /**

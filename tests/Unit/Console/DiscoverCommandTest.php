@@ -310,7 +310,8 @@ PHP);
     $contents = (string) file_get_contents($resourceFile);
 
     expect($contents)
-        ->toContain("HasManyRelation::make('lines')->resource(\\App\\SeviaFlow\\Resources\\LineResource\\LineResource::class),");
+        ->toContain('use App\\SeviaFlow\\Resources\\LineResource\\LineResource;')
+        ->toContain("HasManyRelation::make('lines')->resource(LineResource::class),");
     expect(str_contains($contents, "BelongsToRelation::make('company')"))->toBeFalse();
 });
 

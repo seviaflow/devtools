@@ -10,6 +10,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use SplFileInfo;
+use Throwable;
 
 final class ModelScanner
 {
@@ -157,7 +158,7 @@ final class ModelScanner
             ? array_values(array_filter($defaults['guarded'], static fn (mixed $value): bool => is_string($value)))
             : [];
 
-        $casts = is_array($defaults['casts'] ?? null) ? $defaults['casts'] : [];
+        $casts = $this->effectiveCasts($className, $defaults);
 
         return new DiscoveredModel(
             className: $className,
@@ -188,5 +189,43 @@ final class ModelScanner
         $value = $defaults['primaryKey'] ?? null;
 
         return is_string($value) && trim($value) !== '' ? $value : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $defaults
+     * @return array<string, mixed>
+     */
+    private function effectiveCasts(string $className, array $defaults): array
+    {
+        try {
+            $model = new $className;
+
+            if ($model instanceof Model) {
+                return $this->normalizeCasts($model->getCasts());
+            }
+        } catch (Throwable) {
+            //
+        }
+
+        return is_array($defaults['casts'] ?? null) ? $this->normalizeCasts($defaults['casts']) : [];
+    }
+
+    /**
+     * @param  array<mixed>  $casts
+     * @return array<string, mixed>
+     */
+    private function normalizeCasts(array $casts): array
+    {
+        $normalized = [];
+
+        foreach ($casts as $key => $value) {
+            if (! is_string($key) || $key === '') {
+                continue;
+            }
+
+            $normalized[$key] = $value;
+        }
+
+        return $normalized;
     }
 }

@@ -131,7 +131,7 @@ final class DiscoveryReportRenderer
 
         $pairs = [];
         foreach ($items as $key => $value) {
-            if (! is_string($key) || $key === '') {
+            if ($key === '') {
                 continue;
             }
 

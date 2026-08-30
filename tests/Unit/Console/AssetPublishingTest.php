@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\ServiceProvider;
+use SeviaFlow\DevTools\SeviaFlowDevToolsServiceProvider;
 
 it('DevTools publish tags are registered', function (): void {
     $packageRoot = dirname(__DIR__, 3);
@@ -19,5 +20,5 @@ it('DevTools publish tags are registered', function (): void {
 });
 
 it('does not own UI assets', function (): void {
-    expect(ServiceProvider::pathsToPublish(null, 'seviaflow-ui-assets'))->toBeEmpty();
+    expect(ServiceProvider::pathsToPublish(SeviaFlowDevToolsServiceProvider::class, 'seviaflow-ui-assets'))->toBeEmpty();
 });

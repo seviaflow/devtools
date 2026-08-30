@@ -23,18 +23,50 @@ final class SchemaAnalyzer
             }
 
             $columns = [];
+            $columnDetails = $this->columnDetails($table);
+
             foreach (Schema::getColumnListing($table) as $columnName) {
                 if (! is_string($columnName) || $columnName === '') {
                     continue;
                 }
 
-                $type = (string) Schema::getColumnType($table, $columnName);
-                $columns[] = new SchemaColumn($columnName, $type);
+                $details = $columnDetails[$columnName] ?? [];
+                $type = is_string($details['type_name'] ?? null) && $details['type_name'] !== ''
+                    ? $details['type_name']
+                    : (string) Schema::getColumnType($table, $columnName);
+                $databaseType = is_string($details['type'] ?? null) && $details['type'] !== ''
+                    ? $details['type']
+                    : $type;
+
+                $columns[] = new SchemaColumn($columnName, $type, $databaseType);
             }
 
             return $columns;
         } catch (Throwable) {
             return [];
         }
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function columnDetails(string $table): array
+    {
+        $schema = Schema::getFacadeRoot();
+        if (! is_object($schema) || ! method_exists($schema, 'getColumns')) {
+            return [];
+        }
+
+        $details = [];
+
+        foreach (Schema::getColumns($table) as $column) {
+            if (! is_array($column) || ! is_string($column['name'] ?? null) || $column['name'] === '') {
+                continue;
+            }
+
+            $details[$column['name']] = $column;
+        }
+
+        return $details;
     }
 }

@@ -64,7 +64,7 @@ final class DiscoverCommand extends SeviaFlowCommand
             $resourceDirectory = $resourcesPath.DIRECTORY_SEPARATOR.$resourceClass;
             $resourceNamespace = $resourcesNamespace.'\\'.$resourceClass;
             $columns = $options->withSchema ? $schemaAnalyzer->analyze($model) : [];
-            $fieldSuggestions = $columns === [] ? [] : $fieldSuggestionService->suggest($columns);
+            $fieldSuggestions = $columns === [] ? [] : $fieldSuggestionService->suggest($columns, $model);
             $filterSuggestions = $columns === [] ? [] : $filterSuggestionService->suggest($fieldSuggestions);
             $relationSuggestions = $relationSuggestionService->suggest($model, $columns);
             $workflowCandidates = $columns === [] ? [] : $workflowCandidateDetector->detect($columns);

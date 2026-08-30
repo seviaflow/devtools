@@ -25,6 +25,7 @@ final class RelationSuggestionService
     {
         $suggestions = [];
         $seen = [];
+        $normalizedBelongsToNames = [];
 
         foreach ($this->typedRelationMethods($model) as $item) {
             $key = $item->name().'|'.$item->relationType();
@@ -33,6 +34,10 @@ final class RelationSuggestionService
             }
 
             $seen[$key] = true;
+            if ($item->relationType() === 'belongsTo') {
+                $normalizedBelongsToNames[$this->normalizedRelationName($item->name())] = true;
+            }
+
             $suggestions[] = $item;
         }
 
@@ -48,6 +53,10 @@ final class RelationSuggestionService
             }
 
             if ($this->hasSuggestionForName($seen, $relationName)) {
+                continue;
+            }
+
+            if (isset($normalizedBelongsToNames[$this->normalizedRelationName($relationName)])) {
                 continue;
             }
 
@@ -98,6 +107,13 @@ final class RelationSuggestionService
         }
 
         return false;
+    }
+
+    private function normalizedRelationName(string $relationName): string
+    {
+        $normalized = preg_replace('/[^a-z0-9]+/', '', strtolower($relationName));
+
+        return is_string($normalized) ? $normalized : strtolower($relationName);
     }
 
     /**

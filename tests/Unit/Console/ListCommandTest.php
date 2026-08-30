@@ -18,10 +18,11 @@ it('lists registered resource slug and class', function (): void {
     ]);
     $exitCode = Artisan::call('seviaflow:list');
     $output = Artisan::output();
+    $expectedUiStatus = class_exists('SeviaFlow\\Ui\\SeviaFlowUiServiceProvider') ? 'UI: enabled' : 'UI: not installed';
 
     expect($exitCode)->toBe(0)
         ->and($output)->toContain('SeviaFlow')
-        ->and($output)->toContain('UI: not installed')
+        ->and($output)->toContain($expectedUiStatus)
         ->and($output)->toContain('Permissions: disabled')
         ->and($output)->toContain('Resource path:')
         ->and($output)->toContain('Resource namespace: App\\SeviaFlow\\Resources')

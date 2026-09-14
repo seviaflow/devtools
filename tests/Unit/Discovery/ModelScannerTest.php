@@ -42,6 +42,7 @@ final class Product extends Model
     protected $fillable = ['name', 'price'];
     protected $guarded = [];
     protected $casts = ['price' => 'decimal:2', 'is_active' => 'boolean'];
+    protected $hidden = ['password'];
 }
 PHP);
 
@@ -62,7 +63,8 @@ PHP);
         ->and($results[0]->tableName())->toBe('products')
         ->and($results[0]->primaryKey())->toBe('id')
         ->and($results[0]->fillable())->toBe(['name', 'price'])
-        ->and($results[0]->guarded())->toBe([]);
+        ->and($results[0]->guarded())->toBe([])
+        ->and($results[0]->hidden())->toBe(['password']);
 
     expect($results[0]->casts())->toMatchArray(['price' => 'decimal:2', 'is_active' => 'boolean']);
 });

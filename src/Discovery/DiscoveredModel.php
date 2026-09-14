@@ -10,6 +10,7 @@ final class DiscoveredModel
      * @param  array<int, string>  $fillable
      * @param  array<int, string>  $guarded
      * @param  array<string, mixed>  $casts
+     * @param  array<int, string>  $hidden
      */
     public function __construct(
         private readonly string $className,
@@ -20,6 +21,7 @@ final class DiscoveredModel
         private readonly array $fillable,
         private readonly array $guarded,
         private readonly array $casts,
+        private readonly array $hidden = [],
     ) {}
 
     public function className(): string
@@ -69,5 +71,13 @@ final class DiscoveredModel
     public function casts(): array
     {
         return $this->casts;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function hidden(): array
+    {
+        return $this->hidden;
     }
 }

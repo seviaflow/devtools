@@ -8,6 +8,15 @@ DevTools owns development-time commands, model/resource discovery, generators, d
 
 DevTools depends on Core only. It is intended for `require-dev` usage and does not require UI or API.
 
+## Discovery Safety
+
+Model discovery reads Eloquent hidden attributes and applies a fail-safe sensitive
+column policy. Passwords, remember tokens, 2FA secrets/recovery codes and token
+columns are excluded from suggested fields, filters, generated tables, forms and
+exports. The generator applies the policy again to caller-supplied suggestions;
+discovery therefore cannot make a standard `User` resource expose authentication
+secrets by accident.
+
 ## Installation Status
 
 SeviaFlow is pre-release. The `main` branch is aliased as `0.1.x-dev`; the first stable tag is expected to start at `0.1.0`.

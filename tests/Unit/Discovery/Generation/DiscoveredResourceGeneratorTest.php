@@ -39,6 +39,7 @@ it('builds deterministic style-clean PHP source for generated resources', functi
         'fieldSuggestions' => [
             new FieldSuggestion('id', 'NumberField'),
             new FieldSuggestion('name', 'TextField'),
+            new FieldSuggestion('password', 'PasswordField'),
             new FieldSuggestion('is_active', 'ToggleField'),
             new FieldSuggestion('unit_cost', 'MoneyField'),
         ],
@@ -71,7 +72,9 @@ it('builds deterministic style-clean PHP source for generated resources', functi
 
     expect($form)
         ->toContain('use SeviaFlow\\Core\\Resources\\Fields\\MoneyField;')
-        ->toContain("MoneyField::make('unit_cost')->label('Unit Cost'),");
+        ->toContain("MoneyField::make('unit_cost')->label('Unit Cost'),")
+        ->and($form)->not->toContain('password')
+        ->and($table)->not->toContain('password');
 
     expect($table)
         ->toContain('use SeviaFlow\\Core\\Resources\\Columns\\BooleanColumn;')

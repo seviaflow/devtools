@@ -13,6 +13,7 @@ final class {{ bulk_action_class }}
     {
         return BulkAction::make('{{ bulk_action_name }}')
             ->label('{{ bulk_action_label }}')
+            ->mutating()
             ->requiresConfirmation()
             ->successMessage('{{ bulk_success_message }}')
             ->errorMessage('{{ bulk_error_message }}')

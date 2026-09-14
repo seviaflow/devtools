@@ -20,6 +20,11 @@ final class FieldSuggestionService
 
         foreach ($columns as $column) {
             $name = strtolower($column->name());
+            if (SensitiveColumnPolicy::isSensitive($name)
+                || ($model !== null && in_array($column->name(), $model->hidden(), true))) {
+                continue;
+            }
+
             $semanticType = $this->typeResolver->resolve($column, $model);
 
             $fieldClass = match (true) {

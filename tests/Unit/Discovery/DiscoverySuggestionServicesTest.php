@@ -172,7 +172,7 @@ PHP);
     }
 
     expect($fieldMap['email'])->toBe('EmailField')
-        ->and($fieldMap['password'])->toBe('PasswordField')
+        ->and($fieldMap)->not->toHaveKey('password')
         ->and($fieldMap['description'])->toBe('TextareaField')
         ->and($fieldMap['is_active'])->toBe('ToggleField')
         ->and($fieldMap['quantity'])->toBe('NumberField')

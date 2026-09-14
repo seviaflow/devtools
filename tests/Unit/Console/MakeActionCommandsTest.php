@@ -82,6 +82,7 @@ it('generated bulk action uses current bulk action api', function (): void {
 
     expect($content)->toContain('use SeviaFlow\\Core\\Resources\\BulkAction;')
         ->and($content)->toContain('BulkAction::make(')
+        ->and($content)->toContain('->mutating()')
         ->and($content)->toContain('->requiresConfirmation()')
         ->and($content)->toContain('->successMessage(')
         ->and($content)->toContain('->errorMessage(')

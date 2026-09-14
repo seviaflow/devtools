@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use SeviaFlow\DevTools\Discovery\FieldSuggestion;
 use SeviaFlow\DevTools\Discovery\FilterSuggestion;
 use SeviaFlow\DevTools\Discovery\RelationSuggestion;
+use SeviaFlow\DevTools\Discovery\SensitiveColumnPolicy;
 
 final class DiscoveredResourceGenerator
 {
@@ -32,6 +33,15 @@ final class DiscoveredResourceGenerator
         array $relationSuggestions,
         callable $stubRenderer
     ): GeneratedResourceFileMap {
+        $fieldSuggestions = array_values(array_filter(
+            $fieldSuggestions,
+            static fn (FieldSuggestion $field): bool => ! SensitiveColumnPolicy::isSensitive($field->column())
+        ));
+        $filterSuggestions = array_values(array_filter(
+            $filterSuggestions,
+            static fn (FilterSuggestion $filter): bool => ! SensitiveColumnPolicy::isSensitive($filter->column())
+        ));
+
         $tableClass = $resourceBase.'Table';
         $formClass = $resourceBase.'Form';
 

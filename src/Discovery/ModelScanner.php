@@ -159,6 +159,7 @@ final class ModelScanner
             : [];
 
         $casts = $this->effectiveCasts($className, $defaults);
+        $hidden = $this->effectiveHidden($className, $defaults);
 
         return new DiscoveredModel(
             className: $className,
@@ -169,6 +170,7 @@ final class ModelScanner
             fillable: $fillable,
             guarded: $guarded,
             casts: $casts,
+            hidden: $hidden,
         );
     }
 
@@ -204,10 +206,29 @@ final class ModelScanner
                 return $this->normalizeCasts($model->getCasts());
             }
         } catch (Throwable) {
-            //
+            return is_array($defaults['casts'] ?? null) ? $this->normalizeCasts($defaults['casts']) : [];
         }
 
         return is_array($defaults['casts'] ?? null) ? $this->normalizeCasts($defaults['casts']) : [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $defaults
+     * @return array<int, string>
+     */
+    private function effectiveHidden(string $className, array $defaults): array
+    {
+        try {
+            $model = new $className;
+
+            if ($model instanceof Model) {
+                return $this->normalizeHidden($model->getHidden());
+            }
+        } catch (Throwable) {
+            return is_array($defaults['hidden'] ?? null) ? $this->normalizeHidden($defaults['hidden']) : [];
+        }
+
+        return is_array($defaults['hidden'] ?? null) ? $this->normalizeHidden($defaults['hidden']) : [];
     }
 
     /**
@@ -227,5 +248,17 @@ final class ModelScanner
         }
 
         return $normalized;
+    }
+
+    /**
+     * @param  array<mixed>  $hidden
+     * @return array<int, string>
+     */
+    private function normalizeHidden(array $hidden): array
+    {
+        return array_values(array_filter(
+            $hidden,
+            static fn (mixed $value): bool => is_string($value) && trim($value) !== ''
+        ));
     }
 }

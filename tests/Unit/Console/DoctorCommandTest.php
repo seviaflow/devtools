@@ -100,7 +100,13 @@ it('successful checks return success', function (): void {
     expect($exitCode)->toBe(0);
     expect($output)->toContain('SeviaFlow Doctor');
     expect($output)->toContain('Core config loaded.');
-    expect($output)->toContain('Routes registered under /admin.');
+
+    if (config()->has('seviaflow-ui')) {
+        expect($output)->toContain('Routes registered under /admin.');
+    } else {
+        expect($output)->toContain('UI routes skipped because SeviaFlow UI is not installed or disabled.');
+    }
+
     expect($output)->toContain('1 resources registered.');
     expect($output)->toContain('Workflow activity table exists.');
 });

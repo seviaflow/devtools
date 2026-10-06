@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use SeviaFlow\Core\Resources\ApiResource;
 use SeviaFlow\Core\Resources\Resource;
+use SeviaFlow\Core\Support\Cache\CacheParticipant;
+
+function hasCacheParticipant(string $classSuffix): bool
+{
+    return collect(app()->tagged(CacheParticipant::class))->contains(
+        static fn (mixed $participant): bool => is_object($participant)
+            && str_ends_with($participant::class, $classSuffix)
+    );
+}
 
 beforeEach(function (): void {
     config()->set('cache.default', 'array');
@@ -56,9 +65,18 @@ it('cache command warms resource metadata cache', function (): void {
 });
 
 it('cache command warms navigation cache', function (): void {
-    pest_test_case()->artisan('seviaflow:cache')
-        ->expectsOutput('✓ Navigation metadata cached')
-        ->assertSuccessful();
+    $exitCode = Artisan::call('seviaflow:cache');
+    $output = Artisan::output();
+
+    expect($exitCode)->toBe(0);
+
+    if (! hasCacheParticipant('NavigationMetadataCacheParticipant')) {
+        expect($output)->not->toContain('Navigation metadata cached');
+
+        return;
+    }
+
+    expect($output)->toContain('✓ Navigation metadata cached');
 
     $cached = cache()->store('array')->get('seviaflow.navigation.base');
 
@@ -67,9 +85,18 @@ it('cache command warms navigation cache', function (): void {
 });
 
 it('cache command warms openapi cache', function (): void {
-    pest_test_case()->artisan('seviaflow:cache')
-        ->expectsOutput('✓ OpenAPI schema cached')
-        ->assertSuccessful();
+    $exitCode = Artisan::call('seviaflow:cache');
+    $output = Artisan::output();
+
+    expect($exitCode)->toBe(0);
+
+    if (! hasCacheParticipant('OpenApiCacheParticipant')) {
+        expect($output)->not->toContain('OpenAPI schema cached');
+
+        return;
+    }
+
+    expect($output)->toContain('✓ OpenAPI schema cached');
 
     $cached = cache()->store('array')->get('seviaflow.openapi');
 
@@ -84,12 +111,22 @@ it('cache-clear clears all caches', function (): void {
     $exitCode = Artisan::call('seviaflow:cache-clear');
     $output = Artisan::output();
 
-    expect($exitCode)->toBe(0);
-    expect($output)->toContain('✓ Resource metadata cache cleared')
-        ->and($output)->toContain('✓ Navigation metadata cache cleared')
-        ->and($output)->toContain('✓ OpenAPI cache cleared')
-        ->and($output)->toContain('✓ Dashboard summary cache cleared')
-        ->and($output)->toContain('✓ Dashboard widget cache cleared');
+    expect($exitCode)->toBe(0)
+        ->and($output)->toContain('✓ Resource metadata cache cleared');
+
+    if (hasCacheParticipant('NavigationMetadataCacheParticipant')) {
+        expect($output)->toContain('✓ Navigation metadata cache cleared')
+            ->and($output)->toContain('✓ Dashboard summary cache cleared')
+            ->and($output)->toContain('✓ Dashboard widget cache cleared');
+    } else {
+        expect($output)->not->toContain('Navigation metadata cache cleared');
+    }
+
+    if (hasCacheParticipant('OpenApiCacheParticipant')) {
+        expect($output)->toContain('✓ OpenAPI cache cleared');
+    } else {
+        expect($output)->not->toContain('OpenAPI cache cleared');
+    }
 
     $resourceCacheKey = sprintf('seviaflow:resource-metadata:%s:%s', 'cache-resource', sha1(CacheCommandResource::class));
 
@@ -115,12 +152,22 @@ it('disabled cache flags skip warming but clear still works', function (): void 
     $exitCode = Artisan::call('seviaflow:cache');
     $output = Artisan::output();
 
-    expect($exitCode)->toBe(0);
-    expect($output)->toContain('- Resource metadata cache skipped (disabled)')
-        ->and($output)->toContain('- Navigation metadata cache skipped (disabled)')
-        ->and($output)->toContain('- OpenAPI cache skipped (disabled)')
-        ->and($output)->toContain('- Dashboard summary cache skipped (disabled)')
-        ->and($output)->toContain('- Dashboard widget cache skipped (disabled)');
+    expect($exitCode)->toBe(0)
+        ->and($output)->toContain('- Resource metadata cache skipped (disabled)');
+
+    if (hasCacheParticipant('NavigationMetadataCacheParticipant')) {
+        expect($output)->toContain('- Navigation metadata cache skipped (disabled)')
+            ->and($output)->toContain('- Dashboard summary cache skipped (disabled)')
+            ->and($output)->toContain('- Dashboard widget cache skipped (disabled)');
+    } else {
+        expect($output)->not->toContain('Navigation metadata cache skipped');
+    }
+
+    if (hasCacheParticipant('OpenApiCacheParticipant')) {
+        expect($output)->toContain('- OpenAPI cache skipped (disabled)');
+    } else {
+        expect($output)->not->toContain('OpenAPI cache skipped');
+    }
 
     cache()->store('array')->put('seviaflow.navigation.base', ['tmp' => true], 3600);
     cache()->store('array')->put('seviaflow.openapi', ['tmp' => true], 3600);
@@ -134,21 +181,36 @@ it('disabled cache flags skip warming but clear still works', function (): void 
 
     pest_test_case()->artisan('seviaflow:cache-clear')->assertSuccessful();
 
-    expect(cache()->store('array')->get($resourceCacheKey))->toBeNull()
-        ->and(cache()->store('array')->get('seviaflow.navigation.base'))->toBeNull()
-        ->and(cache()->store('array')->get('seviaflow.openapi'))->toBeNull()
-        ->and(cache()->store('array')->get('seviaflow.dashboard.index'))->toBeNull()
-        ->and(cache()->store('array')->get('seviaflow.dashboard.resource_overview.tmp'))->toBeNull()
-        ->and(cache()->store('array')->get('seviaflow.dashboard.widgets.index'))->toBeNull()
-        ->and(cache()->store('array')->get('seviaflow.dashboard.widget.stats.tmp'))->toBeNull();
+    expect(cache()->store('array')->get($resourceCacheKey))->toBeNull();
+
+    if (hasCacheParticipant('NavigationMetadataCacheParticipant')) {
+        expect(cache()->store('array')->get('seviaflow.navigation.base'))->toBeNull()
+            ->and(cache()->store('array')->get('seviaflow.dashboard.index'))->toBeNull()
+            ->and(cache()->store('array')->get('seviaflow.dashboard.resource_overview.tmp'))->toBeNull()
+            ->and(cache()->store('array')->get('seviaflow.dashboard.widgets.index'))->toBeNull()
+            ->and(cache()->store('array')->get('seviaflow.dashboard.widget.stats.tmp'))->toBeNull();
+    }
+
+    if (hasCacheParticipant('OpenApiCacheParticipant')) {
+        expect(cache()->store('array')->get('seviaflow.openapi'))->toBeNull();
+    }
 });
 
 it('cache warm handles api disabled safely', function (): void {
     config()->set('seviaflow-api.enabled', false);
 
-    pest_test_case()->artisan('seviaflow:cache')
-        ->expectsOutput('✓ OpenAPI schema cached')
-        ->assertSuccessful();
+    $exitCode = Artisan::call('seviaflow:cache');
+    $output = Artisan::output();
+
+    expect($exitCode)->toBe(0);
+
+    if (! hasCacheParticipant('OpenApiCacheParticipant')) {
+        expect($output)->not->toContain('OpenAPI schema cached');
+
+        return;
+    }
+
+    expect($output)->toContain('✓ OpenAPI schema cached');
 
     $cached = cache()->store('array')->get('seviaflow.openapi');
 
@@ -162,6 +224,14 @@ it('cache command reports dashboard cache as user-scoped when enabled', function
     $output = Artisan::output();
 
     expect($exitCode)->toBe(0);
+
+    if (! hasCacheParticipant('DashboardSummaryCacheParticipant')) {
+        expect($output)->not->toContain('Dashboard summary cache skipped')
+            ->and($output)->not->toContain('Dashboard widget cache skipped');
+
+        return;
+    }
+
     expect($output)->toContain('- Dashboard summary cache skipped (user-scoped, warmed on request)')
         ->and($output)->toContain('- Dashboard widget cache skipped (user/context-scoped, warmed on request)');
 });

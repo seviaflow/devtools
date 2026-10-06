@@ -26,8 +26,11 @@ abstract class TestCase extends Orchestra
             'SeviaFlow\\Api\\SeviaFlowApiServiceProvider',
             'SeviaFlow\\Ui\\SeviaFlowUiServiceProvider',
         ] as $provider) {
-            if (class_exists($provider)) {
-                $providers[] = $provider;
+            /** @var class-string $providerClass */
+            $providerClass = sprintf('%s', $provider);
+
+            if (class_exists($providerClass)) {
+                $providers[] = $providerClass;
             }
         }
 

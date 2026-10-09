@@ -19,7 +19,9 @@ secrets by accident.
 
 ## Installation Status
 
-SeviaFlow is pre-release. The `main` branch is aliased as `0.1.x-dev`; the first stable tag is expected to start at `0.1.0`.
+SeviaFlow is pre-release and this repository currently declares `license: proprietary`. DevTools does not require a Hub token, paid API or UI at runtime, but that technical profile is not an open-source grant or proof that public distribution is already authorized. Use an authorized Composer source until the owner publishes the applicable terms.
+
+The intended use is `require-dev` alongside the Core or UI profile. Public availability, no-cost rights, support scope and the first stable tag remain owner decisions.
 
 ```bash
 composer require --dev seviaflow/devtools:^0.1@dev

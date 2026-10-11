@@ -20,30 +20,50 @@ class InstallCommand extends SeviaFlowCommand
     {
         $force = (bool) $this->option('force');
 
-        $this->publishTagIfAvailable('Publishing core configuration', 'seviaflow-config', $force);
-        $this->publishTagIfAvailable('Publishing core migrations', 'seviaflow-migrations', $force);
-        $this->publishTagIfAvailable('Publishing API configuration', 'seviaflow-api-config', $force);
-        $this->publishTagIfAvailable('Publishing UI configuration', 'seviaflow-ui-config', $force);
-        $this->publishTagIfAvailable('Publishing UI migrations', 'seviaflow-ui-migrations', $force);
-        $uiAssetsPublished = $this->publishTagIfAvailable('Publishing UI assets', 'seviaflow-ui-assets', $force);
-        $this->publishTagIfAvailable('Publishing DevTools configuration', 'seviaflow-devtools-config', $force);
+        $uiAssetsPublished = $this->hasPublishTag('seviaflow-ui-assets');
+        $tags = [
+            'seviaflow-config' => 'Publishing core configuration',
+            'seviaflow-migrations' => 'Publishing core migrations',
+            'seviaflow-api-config' => 'Publishing API configuration',
+            'seviaflow-ui-config' => 'Publishing UI configuration',
+            'seviaflow-ui-migrations' => 'Publishing UI migrations',
+            'seviaflow-ui-assets' => 'Publishing UI assets',
+            'seviaflow-devtools-config' => 'Publishing DevTools configuration',
+        ];
 
         if ((bool) $this->option('with-views')) {
-            $this->publishTagIfAvailable('Publishing UI views', 'seviaflow-ui-views', $force);
+            $tags['seviaflow-ui-views'] = 'Publishing UI views';
         }
 
         if ((bool) $this->option('with-stubs')) {
             if ($this->hasPublishTag('seviaflow-stubs')) {
-                $this->components->task('Publishing stubs', fn (): bool => $this->publishTag('seviaflow-stubs', $force));
+                $tags['seviaflow-stubs'] = 'Publishing stubs';
             } else {
                 $this->components->warn('No stubs are available to publish in this package version.');
             }
         }
 
+        foreach ($tags as $tag => $label) {
+            if (! $this->publishTagIfAvailable($label, $tag, $force)) {
+                $this->components->error(sprintf('Installation stopped: publishing %s failed.', $tag));
+
+                return self::FAILURE;
+            }
+        }
+
         if ($this->shouldRunMigrations()) {
-            $this->components->task('Running database migrations', function (): bool {
-                return $this->runArtisan('migrate', ['--force' => true]) === self::SUCCESS;
+            $migrated = false;
+            $this->components->task('Running database migrations', function () use (&$migrated): bool {
+                $migrated = $this->runArtisan('migrate', ['--force' => true]) === self::SUCCESS;
+
+                return $migrated;
             });
+
+            if (! $migrated) {
+                $this->components->error('Installation stopped: database migrations failed.');
+
+                return self::FAILURE;
+            }
         }
 
         $this->newLine();
@@ -103,12 +123,17 @@ class InstallCommand extends SeviaFlowCommand
     protected function publishTagIfAvailable(string $label, string $tag, bool $force): bool
     {
         if (! $this->hasPublishTag($tag)) {
-            return false;
+            return true;
         }
 
-        $this->components->task($label, fn (): bool => $this->publishTag($tag, $force));
+        $published = false;
+        $this->components->task($label, function () use ($tag, $force, &$published): bool {
+            $published = $this->publishTag($tag, $force);
 
-        return true;
+            return $published;
+        });
+
+        return $published;
     }
 
     protected function uiPackageAvailable(): bool

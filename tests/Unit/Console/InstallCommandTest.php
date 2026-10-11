@@ -129,3 +129,91 @@ it('does not run migrations unless requested', function (): void {
 
     expect($calledCommandsAfterMigrate)->toContain('migrate');
 });
+
+it('stops before migrations when publishing fails', function (string $failedTag, array $options): void {
+    $command = new class($failedTag) extends InstallCommand
+    {
+        /** @var array<int, string> */
+        public array $calls = [];
+
+        public function __construct(private readonly string $failedTag)
+        {
+            parent::__construct();
+        }
+
+        protected function hasPublishTag(string $tag): bool
+        {
+            return true;
+        }
+
+        protected function runArtisan(string $command, array $parameters = []): int
+        {
+            $this->calls[] = $command;
+
+            return ($parameters['--tag'] ?? null) === $this->failedTag ? self::FAILURE : self::SUCCESS;
+        }
+    };
+
+    $command->setLaravel(app());
+    $tester = new CommandTester($command);
+    $exitCode = $tester->execute(['--migrate' => true, ...$options], ['interactive' => false]);
+
+    expect($exitCode)->toBe(InstallCommand::FAILURE);
+    expect($command->calls)->not->toContain('migrate');
+    expect($tester->getDisplay())->toContain('publishing '.$failedTag.' failed.');
+    expect($tester->getDisplay())->not->toContain('SeviaFlow installed.');
+    expect($tester->getDisplay())->not->toContain('UI assets published to:');
+})->with([
+    'core configuration' => ['seviaflow-config', []],
+    'UI assets' => ['seviaflow-ui-assets', []],
+    'optional views' => ['seviaflow-ui-views', ['--with-views' => true]],
+    'optional stubs' => ['seviaflow-stubs', ['--with-stubs' => true]],
+]);
+
+it('returns failure without reporting installation success when migrations fail', function (): void {
+    $command = new class extends InstallCommand
+    {
+        protected function hasPublishTag(string $tag): bool
+        {
+            return in_array($tag, install_command_publish_tags(), true);
+        }
+
+        protected function runArtisan(string $command, array $parameters = []): int
+        {
+            return $command === 'migrate' ? self::FAILURE : self::SUCCESS;
+        }
+    };
+
+    $command->setLaravel(app());
+    $tester = new CommandTester($command);
+    $exitCode = $tester->execute(['--migrate' => true], ['interactive' => false]);
+
+    expect($exitCode)->toBe(InstallCommand::FAILURE);
+    expect($tester->getDisplay())->toContain('database migrations failed.');
+    expect($tester->getDisplay())->not->toContain('SeviaFlow installed.');
+    expect($tester->getDisplay())->not->toContain('UI assets published to:');
+});
+
+it('allows absent optional packages without reporting their assets as published', function (): void {
+    $command = new class extends InstallCommand
+    {
+        protected function hasPublishTag(string $tag): bool
+        {
+            return $tag === 'seviaflow-config';
+        }
+
+        protected function runArtisan(string $command, array $parameters = []): int
+        {
+            return self::SUCCESS;
+        }
+    };
+
+    $command->setLaravel(app());
+    $tester = new CommandTester($command);
+    $exitCode = $tester->execute(['--with-views' => true, '--with-stubs' => true], ['interactive' => false]);
+
+    expect($exitCode)->toBe(InstallCommand::SUCCESS);
+    expect($tester->getDisplay())->toContain('SeviaFlow installed.');
+    expect($tester->getDisplay())->toContain('UI assets were not published');
+    expect($tester->getDisplay())->not->toContain('UI assets published to:');
+});

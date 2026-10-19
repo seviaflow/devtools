@@ -2,21 +2,22 @@
     "name": "seviaflow/devtools",
     "description": "SeviaFlow discovery, generation and diagnostics tooling.",
     "type": "library",
-    "homepage": "https://github.com/seviaflow/devtools",
+    "homepage": "https://seviaflow.io/",
     "license": "MIT",
     "support": {
         "issues": "https://github.com/seviaflow/devtools/issues",
-        "source": "https://github.com/seviaflow/devtools"
+        "source": "https://github.com/seviaflow/devtools",
+        "docs": "https://seviaflow.io/docs/0.1/devtools/"
     },
     "require": {
         "php": "^8.2",
-        "seviaflow/core": "^0.1@dev",
+        "seviaflow/core": "^0.1@beta",
         "illuminate/support": "^12.0|^13.0",
         "illuminate/console": "^12.0|^13.0",
         "illuminate/database": "^12.0|^13.0"
     },
     "require-dev": {
-    "larastan/larastan": "^3.10",
+        "larastan/larastan": "^3.10",
         "laravel/pint": "^1.17",
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^3.7|^4.4",

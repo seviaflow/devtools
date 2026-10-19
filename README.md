@@ -1,8 +1,26 @@
-# SeviaFlow DevTools
+<p align="center">
+  <img src="https://seviaflow.io/assets/img/seviaflow-logo.png" alt="SeviaFlow" width="240">
+</p>
 
-Composer package: `seviaflow/devtools`
+<h1 align="center">SeviaFlow DevTools</h1>
 
-Repository: `https://github.com/seviaflow/devtools`
+<p align="center"><strong>Define your data once. Operate it everywhere.</strong></p>
+
+<p align="center">Discover Eloquent models, generate SeviaFlow Resources, and inspect your application setup with focused Artisan development tools.</p>
+
+<p align="center">
+  <a href="https://seviaflow.io/">Website</a> ·
+  <a href="https://seviaflow.io/docs/0.1/why-seviaflow">What is SeviaFlow?</a> ·
+  <a href="https://seviaflow.io/docs/0.1/devtools/">Documentation</a> ·
+  <a href="https://github.com/seviaflow/devtools">Source</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/status-beta-orange?style=flat-square" alt="Beta release">
+  <img src="https://img.shields.io/badge/license-MIT-2563eb?style=flat-square" alt="MIT License">
+</p>
+
+<p align="center"><strong>Composer package:</strong> <code>seviaflow/devtools</code></p>
 
 ## Beta compatibility
 
@@ -21,14 +39,16 @@ exports. The generator applies the policy again to caller-supplied suggestions;
 discovery therefore cannot make a standard `User` resource expose authentication
 secrets by accident.
 
-## Installation Status
+## Installation
 
-SeviaFlow is pre-release. This package is licensed under the [MIT License](LICENSE), which permits commercial use, modification and redistribution with its copyright and license notice. Release tags, distribution endpoints and support scope are documented separately.
+This package is in beta and is licensed under the [MIT License](LICENSE). You may use, modify and redistribute it with the license notice. Beta APIs and compatibility may change before a stable release.
 
-The intended use is `require-dev` alongside the Core or UI profile. The owner approved the free Core/UI/API/DevTools/Framework edition on 2026-10-10. MIT usage rights apply to this package; publication, support scope and the first stable tag remain release decisions.
+Install DevTools as a `require-dev` dependency alongside Core or UI. It is part of the free SeviaFlow edition.
+
+Install the beta with Composer:
 
 ```bash
-composer require --dev seviaflow/devtools:^0.1@dev
+composer require --dev seviaflow/devtools:^0.1@beta
 ```
 
 ## Commands
@@ -42,7 +62,7 @@ php artisan seviaflow:make-resource UserResource --model=User
 
 ## Local Checks
 
-When testing this repository before Packagist registration, register a temporary local Core repository in your Composer root instead of committing a path repository:
+For local development against a Core checkout, register a temporary path repository in your Composer root; do not commit it:
 
 ```bash
 composer validate --strict
